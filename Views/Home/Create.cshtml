@@ -1,0 +1,38 @@
+﻿@model MyASP.ViewModel.StudentCreateVm
+@{ 
+    ViewBag.Title = "new student";
+
+}
+<h1>新建对象</h1>
+<form method="post">
+    @*<input type="text" name="firstname" value="" />da*@
+    <div>
+        <label asp-for="firstname"></label>
+        <input asp-for="firstname" />
+        <span asp-validation-for="firstname"></span>
+    </div>
+    <div>
+        <label asp-for="lastname"></label>
+        <input asp-for="lastname" />
+        <span asp-validation-for="lastname"></span>
+
+    </div>
+    <div>
+        <label asp-for="birthdate"></label>
+        <input asp-for="birthdate" type="date" />
+        <span asp-validation-for="birthdate"></span>
+
+    </div>
+    <div>
+        <label asp-for="gender"></label>
+        <select asp-for="gender" asp-items="Html.GetEnumSelectList<Gender>()"> </select>
+        <span asp-validation-for="gender"></span>
+
+    </div>
+
+    <div>
+        <button type="submit" name="save">保存</button>
+    </div>
+
+</form>
+<a asp-action="Index">返回</a>

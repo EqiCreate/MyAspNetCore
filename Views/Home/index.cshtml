@@ -1,0 +1,24 @@
+﻿@model HomeIndexViewmodel
+@{
+    ViewBag.Title = "Home index";
+    //Layout = "~/Views/Share/_Layout.cshtml";//被收到了viewstart
+    /*
+     1 _viewstart 一般只是将cslayout引用文件写明
+     viewimport 一般作为引用组件using和addtaglhelper 即公用导入模块
+     另外所有特殊模板类cshtml都应该放在上层views文件夹下而不是下级文件夹
+     2  partialasync 将逻辑部分进行复用
+     */
+}
+
+@*@Html.PartialAsync("_StudentTable", Model)*@
+<partial name="_StudentTable" for="@Model" />
+
+@section bottom
+{
+    <div>
+        <a asp-action="Create">创建对象</a>
+    </div>
+}
+@*@await Component.InvokeAsync("Welcome")*@
+@*<vc:welcome></vc:welcome>*@
+

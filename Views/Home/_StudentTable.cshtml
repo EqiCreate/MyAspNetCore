@@ -1,0 +1,15 @@
+﻿@model HomeIndexViewmodel
+
+
+<table>
+    <thead>
+        <tr>
+            <th>名</th>
+            <th>姓</th>
+        </tr>
+    </thead>
+    @foreach (var s in Model.Students)
+    {
+      <partial name="_StudentRow" for="@s" />
+    }
+</table>
