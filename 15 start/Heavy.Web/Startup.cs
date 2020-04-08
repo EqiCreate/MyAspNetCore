@@ -9,6 +9,7 @@ using Heavy.Web.Data;
 using Heavy.Web.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Heavy.Web.Models;
 
 namespace Heavy.Web
 {
@@ -33,8 +34,16 @@ namespace Heavy.Web
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>()
+
+            services.AddIdentity<ApplicationUser, IdentityRole>(opt => 
+            { 
+                opt.Password.RequiredLength = 3;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.Password.RequireLowercase = false;
+                opt.Password.RequireUppercase = false; 
+            })
                 .AddDefaultUI(UIFramework.Bootstrap4)
+                .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -45,6 +54,12 @@ namespace Heavy.Web
                 });
 
             services.AddScoped<IAlbumService, AlbumEfService>();
+            services.AddAuthorization(opt =>
+            {
+                //opt.AddPolicy("编辑专辑", policy => policy.RequireRole("admin"));
+                opt.AddPolicy("编辑专辑", policy => policy.RequireClaim("Edit Albums"));
+            }
+            );
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

@@ -10,7 +10,7 @@ namespace Heavy.Web
     {
         public static void Main(string[] args)
         {
-            var host = CreateWebHostBuilder(args).Build();
+            var host = CreateWebHostBuilder(args).Build();//执行startup的代码
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -19,7 +19,7 @@ namespace Heavy.Web
                     var context = services.GetRequiredService<HeavyContext>();
                     DatabaseInitializer.Seed(context);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     //we could log this in a real-world situation
                 }
