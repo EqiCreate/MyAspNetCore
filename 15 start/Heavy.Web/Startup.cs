@@ -60,6 +60,21 @@ namespace Heavy.Web
                 opt.AddPolicy("编辑专辑", policy => policy.RequireClaim("Edit Albums"));
             }
             );
+            services.AddAntiforgery(options =>
+            {
+                // Set Cookie properties using CookieBuilder properties†.
+                options.FormFieldName = "AntiforgeryFieldname";
+                options.HeaderName = "X-CSRF-TOKEN-HEADERNAME";
+                options.SuppressXFrameOptionsHeader = false;
+            });
+            services.AddMvc(opt=>
+            {
+                opt.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+                opt.CacheProfiles.Add("Default", new CacheProfile() { Duration=10} );
+                opt.CacheProfiles.Add("Never", new CacheProfile() {Location=ResponseCacheLocation.None,NoStore=true });
+
+            });
+            services.AddResponseCompression();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -81,6 +96,7 @@ namespace Heavy.Web
             app.UseCookiePolicy();
 
             app.UseAuthentication();
+            app.UseResponseCompression();//1k以上的数据进行压缩
 
             app.UseMvc(routes =>
             {

@@ -244,5 +244,16 @@ namespace Heavy.Web.Controllers
             return View(userRoleViewModel);
         }
 
+        [AcceptVerbs("Get","Post")]
+        public async Task<IActionResult> CheckRoleExit(string rolename)
+        {
+            var role = await _roleManager.FindByNameAsync(rolename);
+            if (role!=null)
+            {
+              return  Json(false);
+            }
+            return Json(true);
+        }
+
     }
 }
