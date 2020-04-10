@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Routine.Api.Services;
 using Routine.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace Routine.Api
 {
@@ -28,8 +29,12 @@ namespace Routine.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers(setup=>
+            {
+                setup.ReturnHttpNotAcceptable = true;//设置accept 类型错误的时候返回406
+            });
             services.AddScoped<ICompanyRepository, CompanyRepository>();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddDbContext<RoutineDbContext>(opt=> 
             {
                 opt.UseSqlite("Data Source=routine.db");
