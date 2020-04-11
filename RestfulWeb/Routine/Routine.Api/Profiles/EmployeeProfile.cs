@@ -17,6 +17,7 @@ namespace Routine.Api.Profiles
                 .ForMember(d=>d.GenderDisplay,opt=>opt.MapFrom(src=>src.gender.ToString()))
                 .ForMember(d => d.Age, opt => opt.MapFrom(src => DateTime.Now.Year-src.DateofBirth.Year+1))
                 ;
+            CreateMap<EmployeeAddDto, Employee>();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Routine.Api.Data;
+using Routine.Api.DtoParameters;
 using Routine.Api.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace Routine.Api.Services
         {
             if (company == null) throw new ArgumentException(nameof(company));
             company.Id = Guid.NewGuid();
+            if(company.Employees!=null)
             foreach (var employee in company.Employees)
             { 
                 employee.Id= Guid.NewGuid();
@@ -56,8 +58,9 @@ namespace Routine.Api.Services
             this.routineDbContext.Employees.Remove(employee);
         }
 
-        public async Task<IEnumerable<Company>> GetCompaniesAsync()
+        public async Task<IEnumerable<Company>> GetCompaniesAsync(CompanyDtoParameters parameters)
         {
+            if (parameters == null) throw new ArgumentException(nameof(parameters));
             return await this.routineDbContext.Companies.ToListAsync();
         }
 
@@ -86,10 +89,25 @@ namespace Routine.Api.Services
             return await this.routineDbContext.Employees.Where(x => x.CompanyId == companyid && x.Id == employeeid).FirstOrDefaultAsync();
         }
 
-        public  async Task<IEnumerable<Employee>> GetEmployeesAsync(Guid companyid)
+        public  async Task<IEnumerable<Employee>> GetEmployeesAsync(Guid companyid,string genderDisplay,string q)
         {
             if (companyid == Guid.Empty) throw new ArgumentException(nameof(companyid));
-            return await this.routineDbContext.Employees.Where(x => x.CompanyId == companyid).OrderBy(x => x.EmployeeNo).ToListAsync();
+            if (string.IsNullOrWhiteSpace(genderDisplay) && string.IsNullOrWhiteSpace(q))
+            { 
+                return await this.routineDbContext.Employees.Where(x => x.CompanyId == companyid).OrderBy(x => x.EmployeeNo).ToListAsync();
+            }
+            var items = this.routineDbContext.Employees.Where(x=>x.CompanyId==companyid);
+            var gender = Enum.Parse<Gender>(genderDisplay.Trim());
+            if (!string.IsNullOrWhiteSpace(genderDisplay))
+            {
+                items = items.Where(x=>x.gender==gender);
+            }
+            if (!string.IsNullOrWhiteSpace(q))
+            { 
+            
+            }
+          
+            return await items.Where(x => x.CompanyId == companyid && x.gender==gender).OrderBy(x => x.EmployeeNo).ToListAsync();
         }
 
         public async Task<bool> SaveAsync()

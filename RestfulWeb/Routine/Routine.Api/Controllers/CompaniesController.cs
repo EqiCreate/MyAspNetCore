@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Routine.Api.Models;
 using Routine.Api.Services;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Routine.Api.DtoParameters;
+using Routine.Api.Entities;
 
 namespace Routine.Api.Controllers
 {
@@ -39,9 +41,10 @@ namespace Routine.Api.Controllers
        // }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies()
+        [HttpHead]//不返回body其他和httpget一致
+        public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies(CompanyDtoParameters parameters)
         {
-            var companies = await this.companyRepository.GetCompaniesAsync();
+            var companies = await this.companyRepository.GetCompaniesAsync(parameters);
             // var companiesDto = new List<CompanyDto>();
             //foreach (var company in companies)
             //{
@@ -54,13 +57,24 @@ namespace Routine.Api.Controllers
             var companiesDto = this.mapper.Map<IEnumerable<CompanyDto>>(companies);
             return Ok(companiesDto);
         }
-        [HttpGet("{companyid}")]
+        [HttpGet("{companyid}",Name =nameof(GetCompany))]
         public async Task<ActionResult<CompanyDto>> GetCompany(Guid companyid)
         {
             if (!await this.companyRepository.CompanyExitsAsync(companyid))
                 return NotFound();
             var company = await this.companyRepository.GetCompanyAsync(companyid);
             return Ok(this.mapper.Map<CompanyDto>(company));
+        }
+        [HttpPost]
+        public async Task<ActionResult<CompanyDto>> CreateCompany(CompanyAddDto companyAddDto)
+        {
+            var entity = this.mapper.Map<Company>(companyAddDto);
+            this.companyRepository.AddCompany(entity);
+            await this.companyRepository.SaveAsync();
+
+            var returnDto = this.mapper.Map<CompanyDto>(entity);
+            return CreatedAtRoute(nameof(GetCompany),new { companyid= returnDto.Id }, returnDto);
+
         }
     }
 }
