@@ -32,7 +32,8 @@ namespace Routine.Api
             services.AddControllers(setup=>
             {
                 setup.ReturnHttpNotAcceptable = true;//设置accept 类型错误的时候返回406
-            });
+            })
+                .AddXmlDataContractSerializerFormatters();//设置更多的支持xml格式的content type
             services.AddScoped<ICompanyRepository, CompanyRepository>();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddDbContext<RoutineDbContext>(opt=> 

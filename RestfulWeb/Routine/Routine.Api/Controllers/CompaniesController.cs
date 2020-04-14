@@ -12,7 +12,7 @@ using Routine.Api.Entities;
 
 namespace Routine.Api.Controllers
 {
-    [ApiController]
+    [ApiController]//当modelstate验证出错时候，自动返回客户端400
     [Route("api/companies")]
     public class CompaniesController : ControllerBase
     {
@@ -75,6 +75,12 @@ namespace Routine.Api.Controllers
             var returnDto = this.mapper.Map<CompanyDto>(entity);
             return CreatedAtRoute(nameof(GetCompany),new { companyid= returnDto.Id }, returnDto);
 
+        }
+        [HttpOptions]
+        public IActionResult GetCompanyOption()
+        {
+            Response.Headers.Add("Allow","GET,POST,OPTIONS");
+            return Ok();
         }
     }
 }
