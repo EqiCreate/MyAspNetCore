@@ -13,10 +13,10 @@ namespace Routine.Api.ValidationAttributes
         /// <returns></returns>
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            var adddtos = (EmployeeAddDto)validationContext.ObjectInstance;
+            var adddtos = (EmployeeAddOrUpdateDto)validationContext.ObjectInstance;
             if (adddtos.EmployeeNo == adddtos.FirstName)
             {
-                return new ValidationResult("员工编号不可以与员工名相同",new [] { nameof(EmployeeAddDto) });
+                return new ValidationResult("员工编号不可以与员工名相同",new [] { nameof(EmployeeAddOrUpdateDto) });
             }
             return ValidationResult.Success;
         }

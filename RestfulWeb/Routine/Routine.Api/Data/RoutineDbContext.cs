@@ -21,7 +21,8 @@ namespace Routine.Api.Data
             modelBuilder.Entity<Company>().Property(x => x.Name).IsRequired().HasMaxLength(100);
             modelBuilder.Entity<Company>().Property(x => x.Introduction).IsRequired().HasMaxLength(500);
             modelBuilder.Entity<Employee>().Property(x => x.EmployeeNo).IsRequired().HasMaxLength(10);
-            modelBuilder.Entity<Employee>().HasOne(x => x.Company).WithMany(x => x.Employees).HasForeignKey(x => x.CompanyId).OnDelete(DeleteBehavior.Restrict);
+            //设置级联删除
+            modelBuilder.Entity<Employee>().HasOne(x => x.Company).WithMany(x => x.Employees).HasForeignKey(x => x.CompanyId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Company>().HasData(
                 new Company()
                 { 

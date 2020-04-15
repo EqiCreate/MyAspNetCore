@@ -2,6 +2,7 @@
 using Routine.Api.Data;
 using Routine.Api.DtoParameters;
 using Routine.Api.Entities;
+using Routine.Api.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,10 +59,13 @@ namespace Routine.Api.Services
             this.routineDbContext.Employees.Remove(employee);
         }
 
-        public async Task<IEnumerable<Company>> GetCompaniesAsync(CompanyDtoParameters parameters)
+        public async Task<PagedList<Company>> GetCompaniesAsync(CompanyDtoParameters parameters)
         {
             if (parameters == null) throw new ArgumentException(nameof(parameters));
-            return await this.routineDbContext.Companies.ToListAsync();
+             var queryExpression=this.routineDbContext.Companies as IQueryable<Company>;
+            // queryExpression = queryExpression.Skip(parameters.PageSize * (parameters.PageNumber - 1)).Take(parameters.PageSize);
+            //return await queryExpression.ToListAsync();
+            return await PagedList<Company>.CreateAsync(queryExpression,parameters.PageNumber,parameters.PageSize);
         }
 
         public async Task<IEnumerable<Company>> GetCompaniesAsync(IEnumerable<Guid> companyids)

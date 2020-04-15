@@ -9,6 +9,9 @@ using Routine.Api.Services;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 using Routine.Api.DtoParameters;
 using Routine.Api.Entities;
+using Routine.Api.Helpers;
+using System.Text.Json;
+using System.Text.Encodings.Web;
 
 namespace Routine.Api.Controllers
 {
@@ -24,36 +27,25 @@ namespace Routine.Api.Controllers
             this.companyRepository = companyRepository??throw new ArgumentException(nameof(companyRepository));
             this.mapper = mapper ?? throw new ArgumentException(nameof(mapper));
         }
-       //[HttpGet]
-       // public async Task<IActionResult> GetCompanies() 
-       // {
-       //     var companies = await this.companyRepository.GetCompaniesAsync();
-       //     var companiesDto = new List<CompanyDto>();
-       //     foreach (var company in companies)
-       //     {
-       //         companiesDto.Add(new CompanyDto()
-       //         { 
-       //             Id=company.Id,
-       //             Name=company.Name
-       //         });
-       //     }
-       //     return Ok(companiesDto);
-       // }
-
-        [HttpGet]
+        [HttpGet(Name =nameof(GetCompanies))]
         [HttpHead]//不返回body其他和httpget一致
-        public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies(CompanyDtoParameters parameters)
+        public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies([FromQuery]CompanyDtoParameters parameters)
         {
             var companies = await this.companyRepository.GetCompaniesAsync(parameters);
-            // var companiesDto = new List<CompanyDto>();
-            //foreach (var company in companies)
-            //{
-            //    companiesDto.Add(new CompanyDto()
-            //    {
-            //        Id = company.Id,
-            //        CompanyName = company.Name
-            //    });
-            //}
+            #region 分页增加自描述信息
+            var previousPagelink = companies.HasPrevious ? this.CreateCompaniesResourceUri(parameters,ResourceUriType.PreviousPage):null;
+            var nextPagelink = companies.HasNext ? this.CreateCompaniesResourceUri(parameters,ResourceUriType.NextPage):null;
+            var paginationMetedata = new 
+            {
+                totalCount=companies.TotalCount,
+                pageSize=companies.PageSize,
+                currentPage=companies.CurrentPage,
+                totalPages = companies.TotalPages,
+                previousPagelink,
+                nextPagelink
+            };
+            this.Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetedata, new JsonSerializerOptions() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+            #endregion
             var companiesDto = this.mapper.Map<IEnumerable<CompanyDto>>(companies);
             return Ok(companiesDto);
         }
@@ -81,6 +73,33 @@ namespace Routine.Api.Controllers
         {
             Response.Headers.Add("Allow","GET,POST,OPTIONS");
             return Ok();
+        }
+
+        [HttpDelete("{companyid}")]
+        public async Task<IActionResult> DeleteCompany(Guid companyId)
+        {
+            var companyEntity = await this.companyRepository.GetCompanyAsync(companyId);
+            if (companyEntity == null) return NotFound();
+            else 
+            {
+                await this.companyRepository.GetEmployeesAsync(companyId,null,null);//很奇怪，需要从内存加载出来才可以删除级联
+                this.companyRepository.DeleteCompany(companyEntity);
+                await this.companyRepository.SaveAsync();
+                return NoContent();
+            }
+        }
+
+        private string CreateCompaniesResourceUri(CompanyDtoParameters Parameters, ResourceUriType type)
+        {
+            switch (type)
+            {
+                case ResourceUriType.PreviousPage:
+                    return Url.Link(nameof(GetCompanies),new { pageNumber=Parameters.PageNumber-1,pageSize=Parameters.PageSize, companyName=Parameters.CompanyName, searchTerm=Parameters.SearchTerm });
+                case ResourceUriType.NextPage:
+                    return Url.Link(nameof(GetCompanies), new { pageNumber = Parameters.PageNumber + 1, pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
+                default:
+                    return Url.Link(nameof(GetCompanies), new { pageNumber = Parameters.PageNumber , pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
+            }
         }
     }
 }

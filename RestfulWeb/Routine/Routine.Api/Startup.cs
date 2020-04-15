@@ -14,6 +14,8 @@ using Routine.Api.Services;
 using Routine.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json.Serialization;
 
 namespace Routine.Api
 {
@@ -33,7 +35,18 @@ namespace Routine.Api
             {
                 setup.ReturnHttpNotAcceptable = true;//设置accept 类型错误的时候返回406
             })
-                .AddXmlDataContractSerializerFormatters();//设置更多的支持xml格式的content type
+                .ConfigureApiBehaviorOptions(setup=>//设置返回实体问题422 可考虑使用fluentvalidation 进行第三方库验证
+                {
+                    setup.InvalidModelStateResponseFactory = context => 
+                    {
+                        var problemdetails = new ValidationProblemDetails(context.ModelState) { Type = "http://www.baidu.com", Title = "occured error", Status = StatusCodes.Status422UnprocessableEntity, Detail = "请看详细信息", Instance = context.HttpContext.Request.Path };
+                        problemdetails.Extensions.Add("traceId",context.HttpContext.TraceIdentifier);
+                        return new UnprocessableEntityObjectResult(problemdetails) { ContentTypes = { "application/problem+json" } };
+                    };
+                })
+                .AddNewtonsoftJson(setup=> { setup.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver(); })
+                .AddXmlDataContractSerializerFormatters()//设置更多的支持xml格式的content type
+                ;
             services.AddScoped<ICompanyRepository, CompanyRepository>();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddDbContext<RoutineDbContext>(opt=> 

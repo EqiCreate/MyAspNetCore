@@ -18,6 +18,8 @@ namespace Routine.Api.Profiles
                 .ForMember(d => d.Age, opt => opt.MapFrom(src => DateTime.Now.Year-src.DateofBirth.Year+1))
                 ;
             CreateMap<EmployeeAddDto, Employee>();
+            CreateMap<EmployeeUpdateDto, Employee>();
+            CreateMap<Employee, EmployeeUpdateDto>();
         }
     }
 }
