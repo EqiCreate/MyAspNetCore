@@ -31,7 +31,8 @@ namespace Routine.Api.Controllers
         }
         [HttpGet(Name =nameof(GetCompanies))]
         [HttpHead]//不返回body其他和httpget一致
-        public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies([FromQuery]CompanyDtoParameters parameters)
+        //public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies([FromQuery]CompanyDtoParameters parameters)
+        public async Task<IActionResult> GetCompanies([FromQuery]CompanyDtoParameters parameters)
         {
             if (!this.propertyMappingService.ValidMappingExitFor<CompanyDto, Company>(parameters.OrderBy)) return BadRequest();
 
@@ -51,7 +52,7 @@ namespace Routine.Api.Controllers
             this.Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetedata, new JsonSerializerOptions() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
             #endregion
             var companiesDto = this.mapper.Map<IEnumerable<CompanyDto>>(companies);
-            return Ok(companiesDto);
+            return Ok(companiesDto.ShapeData(parameters.Fields));
         }
         [HttpGet("{companyid}",Name =nameof(GetCompany))]
         public async Task<ActionResult<CompanyDto>> GetCompany(Guid companyid)
@@ -98,11 +99,11 @@ namespace Routine.Api.Controllers
             switch (type)
             {
                 case ResourceUriType.PreviousPage:
-                    return Url.Link(nameof(GetCompanies),new { orderBy=Parameters.OrderBy, pageNumber=Parameters.PageNumber-1,pageSize=Parameters.PageSize, companyName=Parameters.CompanyName, searchTerm=Parameters.SearchTerm });
+                    return Url.Link(nameof(GetCompanies),new { fields=Parameters.Fields, orderBy=Parameters.OrderBy, pageNumber=Parameters.PageNumber-1,pageSize=Parameters.PageSize, companyName=Parameters.CompanyName, searchTerm=Parameters.SearchTerm });
                 case ResourceUriType.NextPage:
-                    return Url.Link(nameof(GetCompanies), new { orderBy = Parameters.OrderBy, pageNumber = Parameters.PageNumber + 1, pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
+                    return Url.Link(nameof(GetCompanies), new { fields = Parameters.Fields, orderBy = Parameters.OrderBy, pageNumber = Parameters.PageNumber + 1, pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
                 default:
-                    return Url.Link(nameof(GetCompanies), new { orderBy = Parameters.OrderBy, pageNumber = Parameters.PageNumber , pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
+                    return Url.Link(nameof(GetCompanies), new { fields = Parameters.Fields, orderBy = Parameters.OrderBy, pageNumber = Parameters.PageNumber , pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
             }
         }
     }
