@@ -21,16 +21,20 @@ namespace Routine.Api.Controllers
     {
         private readonly ICompanyRepository companyRepository;
         private readonly IMapper mapper;
+        private readonly IPropertyMappingService propertyMappingService;
 
-        public CompaniesController(ICompanyRepository companyRepository,IMapper mapper)
+        public CompaniesController(ICompanyRepository companyRepository,IMapper mapper, IPropertyMappingService propertyMappingService)
         {
             this.companyRepository = companyRepository??throw new ArgumentException(nameof(companyRepository));
             this.mapper = mapper ?? throw new ArgumentException(nameof(mapper));
+            this.propertyMappingService = propertyMappingService ?? throw new ArgumentException(nameof(propertyMappingService));
         }
         [HttpGet(Name =nameof(GetCompanies))]
         [HttpHead]//不返回body其他和httpget一致
         public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies([FromQuery]CompanyDtoParameters parameters)
         {
+            if (!this.propertyMappingService.ValidMappingExitFor<CompanyDto, Company>(parameters.OrderBy)) return BadRequest();
+
             var companies = await this.companyRepository.GetCompaniesAsync(parameters);
             #region 分页增加自描述信息
             var previousPagelink = companies.HasPrevious ? this.CreateCompaniesResourceUri(parameters,ResourceUriType.PreviousPage):null;
@@ -82,7 +86,7 @@ namespace Routine.Api.Controllers
             if (companyEntity == null) return NotFound();
             else 
             {
-                await this.companyRepository.GetEmployeesAsync(companyId,null,null);//很奇怪，需要从内存加载出来才可以删除级联
+                await this.companyRepository.GetEmployeesAsync(companyId,null);//很奇怪，需要从内存加载出来才可以删除级联
                 this.companyRepository.DeleteCompany(companyEntity);
                 await this.companyRepository.SaveAsync();
                 return NoContent();
@@ -94,11 +98,11 @@ namespace Routine.Api.Controllers
             switch (type)
             {
                 case ResourceUriType.PreviousPage:
-                    return Url.Link(nameof(GetCompanies),new { pageNumber=Parameters.PageNumber-1,pageSize=Parameters.PageSize, companyName=Parameters.CompanyName, searchTerm=Parameters.SearchTerm });
+                    return Url.Link(nameof(GetCompanies),new { orderBy=Parameters.OrderBy, pageNumber=Parameters.PageNumber-1,pageSize=Parameters.PageSize, companyName=Parameters.CompanyName, searchTerm=Parameters.SearchTerm });
                 case ResourceUriType.NextPage:
-                    return Url.Link(nameof(GetCompanies), new { pageNumber = Parameters.PageNumber + 1, pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
+                    return Url.Link(nameof(GetCompanies), new { orderBy = Parameters.OrderBy, pageNumber = Parameters.PageNumber + 1, pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
                 default:
-                    return Url.Link(nameof(GetCompanies), new { pageNumber = Parameters.PageNumber , pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
+                    return Url.Link(nameof(GetCompanies), new { orderBy = Parameters.OrderBy, pageNumber = Parameters.PageNumber , pageSize = Parameters.PageSize, companyName = Parameters.CompanyName, searchTerm = Parameters.SearchTerm });
             }
         }
     }

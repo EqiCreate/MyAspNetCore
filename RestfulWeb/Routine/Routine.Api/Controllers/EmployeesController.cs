@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Routine.Api.DtoParameters;
 using Routine.Api.Entities;
 using Routine.Api.Models;
 using Routine.Api.Services;
@@ -28,11 +29,11 @@ namespace Routine.Api.Controllers
         }
 
         [HttpGet()]
-        public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployeesForCompany(Guid companyId,[FromQuery(Name ="gender")]string genderDisplay,string q)
+        public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployeesForCompany(Guid companyId,[FromQuery]EmployeeDtoParameter parameter)
         {
             if (!await this.companyRepository.CompanyExitsAsync(companyId))
                 return NotFound();
-            var employees = await companyRepository.GetEmployeesAsync(companyId,genderDisplay, q);
+            var employees = await companyRepository.GetEmployeesAsync(companyId, parameter);
             var dtos = this.mapper.Map<IEnumerable<EmployeeDto>>(employees);
             return Ok(dtos);
         }

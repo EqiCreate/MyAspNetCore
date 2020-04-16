@@ -20,6 +20,10 @@ namespace Routine.Api.Data
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Company>().Property(x => x.Name).IsRequired().HasMaxLength(100);
             modelBuilder.Entity<Company>().Property(x => x.Introduction).IsRequired().HasMaxLength(500);
+            modelBuilder.Entity<Company>().Property(x => x.Country).HasMaxLength(50);
+            modelBuilder.Entity<Company>().Property(x => x.Industry).HasMaxLength(50);
+            modelBuilder.Entity<Company>().Property(x => x.Product).HasMaxLength(50);
+
             modelBuilder.Entity<Employee>().Property(x => x.EmployeeNo).IsRequired().HasMaxLength(10);
             //设置级联删除
             modelBuilder.Entity<Employee>().HasOne(x => x.Company).WithMany(x => x.Employees).HasForeignKey(x => x.CompanyId).OnDelete(DeleteBehavior.Cascade);
@@ -29,18 +33,27 @@ namespace Routine.Api.Data
                     Id=Guid.Parse("dddeadee-098d-3d3d-bece-44ddaaaee511"),
                     Name="google",
                     Introduction="great1",
+                    Industry="WEB",
+                    Country="USA",
+                    Product="WEB"
                 },
                 new Company()
                 {
                     Id = Guid.Parse("111eadee-098d-3d3d-bece-44ddaaaee511"),
                     Name = "ms",
                     Introduction = "great2",
+                    Industry = "Software",
+                    Country = "USA",
+                    Product = "SF"
                 },
                 new Company()
                 {
                     Id = Guid.Parse("222eadee-098d-3d3d-bece-44ddaaaee511"),
                     Name = "alibaba",
                     Introduction = "great3",
+                    Industry = "Shopping",
+                    Country = "China",
+                    Product = "SF"
                 }
                 );
             modelBuilder.Entity<Employee>().HasData(

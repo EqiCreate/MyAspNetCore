@@ -3,6 +3,7 @@ using Routine.Api.Data;
 using Routine.Api.DtoParameters;
 using Routine.Api.Entities;
 using Routine.Api.Helpers;
+using Routine.Api.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +14,12 @@ namespace Routine.Api.Services
     public class CompanyRepository : ICompanyRepository
     {
         private readonly RoutineDbContext routineDbContext;
+        private readonly IPropertyMappingService propertyMappingService;
 
-        public CompanyRepository(RoutineDbContext routineDbContext)
+        public CompanyRepository(RoutineDbContext routineDbContext, IPropertyMappingService propertyMappingService)
         {
-            this.routineDbContext = routineDbContext??throw new Exception(nameof(routineDbContext));
+            this.routineDbContext = routineDbContext??throw new ArgumentNullException(nameof(routineDbContext));
+            this.propertyMappingService = propertyMappingService ?? throw new ArgumentNullException(nameof(propertyMappingService));
         }
         public void AddCompany(Company company)
         {
@@ -59,13 +62,26 @@ namespace Routine.Api.Services
             this.routineDbContext.Employees.Remove(employee);
         }
 
-        public async Task<PagedList<Company>> GetCompaniesAsync(CompanyDtoParameters parameters)
-        {
-            if (parameters == null) throw new ArgumentException(nameof(parameters));
+        public async Task<PagedList<Company>> GetCompaniesAsync(CompanyDtoParameters parameter)
+         {
+            if (parameter == null) throw new ArgumentException(nameof(parameter));
              var queryExpression=this.routineDbContext.Companies as IQueryable<Company>;
             // queryExpression = queryExpression.Skip(parameters.PageSize * (parameters.PageNumber - 1)).Take(parameters.PageSize);
             //return await queryExpression.ToListAsync();
-            return await PagedList<Company>.CreateAsync(queryExpression,parameters.PageNumber,parameters.PageSize);
+            if (!string.IsNullOrWhiteSpace(parameter.CompanyName))
+            {
+                parameter.CompanyName = parameter.CompanyName.Trim();
+                queryExpression = queryExpression.Where(x=>x.Name== parameter.CompanyName);
+            }
+            if (!string.IsNullOrWhiteSpace(parameter.SearchTerm))
+            {
+                parameter.SearchTerm = parameter.SearchTerm.Trim();
+                queryExpression = queryExpression.Where(x => x.Name.Contains(parameter.SearchTerm) || x.Introduction.Contains(parameter.SearchTerm));
+            }
+
+            var mappingDict = this.propertyMappingService.GetPropertyMapping<CompanyDto, Company>();
+            queryExpression = queryExpression.ApplySource(parameter.OrderBy, mappingDict);
+            return await PagedList<Company>.CreateAsync(queryExpression, parameter.PageNumber, parameter.PageSize);
         }
 
         public async Task<IEnumerable<Company>> GetCompaniesAsync(IEnumerable<Guid> companyids)
@@ -93,25 +109,41 @@ namespace Routine.Api.Services
             return await this.routineDbContext.Employees.Where(x => x.CompanyId == companyid && x.Id == employeeid).FirstOrDefaultAsync();
         }
 
-        public  async Task<IEnumerable<Employee>> GetEmployeesAsync(Guid companyid,string genderDisplay,string q)
+        public  async Task<IEnumerable<Employee>> GetEmployeesAsync(Guid companyid,EmployeeDtoParameter parameter)
         {
             if (companyid == Guid.Empty) throw new ArgumentException(nameof(companyid));
-            if (string.IsNullOrWhiteSpace(genderDisplay) && string.IsNullOrWhiteSpace(q))
-            { 
-                return await this.routineDbContext.Employees.Where(x => x.CompanyId == companyid).OrderBy(x => x.EmployeeNo).ToListAsync();
-            }
+            //if (string.IsNullOrWhiteSpace(parameter.Gender) && string.IsNullOrWhiteSpace(parameter.Q))
+            //{
+            //    return await this.routineDbContext.Employees.Where(x => x.CompanyId == companyid).OrderBy(x => x.EmployeeNo).ToListAsync();
+            //}
             var items = this.routineDbContext.Employees.Where(x=>x.CompanyId==companyid);
-            var gender = Enum.Parse<Gender>(genderDisplay.Trim());
-            if (!string.IsNullOrWhiteSpace(genderDisplay))
+            //var gender = Enum.Parse<Gender>(parameter.Gender.Trim());
+            if (!string.IsNullOrWhiteSpace(parameter.Gender))
             {
-                items = items.Where(x=>x.gender==gender);
+                items = items.Where(x=>x.gender== Enum.Parse<Gender>(parameter.Gender.Trim()));
             }
-            if (!string.IsNullOrWhiteSpace(q))
-            { 
-            
+            if (!string.IsNullOrWhiteSpace(parameter.Q))
+            {
+                parameter.Q = parameter.Q.Trim();
+                items = items.Where(x=>x.EmployeeNo.Contains(parameter.Q)
+                    || x.FirstName.Contains(parameter.Q)
+                    || x.LastName.Contains(parameter.Q)
+                );
             }
-          
-            return await items.Where(x => x.CompanyId == companyid && x.gender==gender).OrderBy(x => x.EmployeeNo).ToListAsync();
+            //if (!string.IsNullOrWhiteSpace(parameter.OrderBy))
+            //{
+            //    if (parameter.OrderBy.ToLowerInvariant() == "name")
+            //    {
+            //        items = items.OrderBy(x => x.FirstName).ThenBy(x => x.LastName);
+            //    }
+            //    else
+            //    {
+            //        items = items.OrderBy(x => parameter.OrderBy);
+            //    }
+            //}
+            var mappingDict = this.propertyMappingService.GetPropertyMapping<EmployeeDto, Employee>();
+            items=items.ApplySource(parameter.OrderBy, mappingDict);
+            return await items.ToListAsync();
         }
 
         public async Task<bool> SaveAsync()

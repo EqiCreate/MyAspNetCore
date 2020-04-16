@@ -1,24 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Routine.Api.DtoParameters
 {
-    public class CompanyDtoParameters
+    public class EmployeeDtoParameter
     {
         private const int MaxPageSize = 20;
-        public string CompanyName { get; set; }
+        public string Gender { get; set; }
 
-        public string SearchTerm { get; set; }
+        public string Q { get; set; }
 
         public int PageNumber { get; set; } = 1;
 
-        private int _pageSize=5;
+        private int _pageSize = 2;
 
         public int PageSize
         {
             get { return _pageSize; }
             set { _pageSize = value > MaxPageSize ? MaxPageSize : value; }
         }
-        public string OrderBy { get; set; } = "CompanyName";
-
+        public string OrderBy { get; set; } = "Name";
     }
 }
