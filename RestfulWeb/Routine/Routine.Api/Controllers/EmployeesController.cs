@@ -28,7 +28,7 @@ namespace Routine.Api.Controllers
             this.companyRepository = companyRepository??throw new ArgumentException(nameof(companyRepository)); ;
         }
 
-        [HttpGet()]
+        [HttpGet(Name =nameof(GetEmployeesForCompany))]
         public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployeesForCompany(Guid companyId,[FromQuery]EmployeeDtoParameter parameter)
         {
             if (!await this.companyRepository.CompanyExitsAsync(companyId))
@@ -37,6 +37,7 @@ namespace Routine.Api.Controllers
             var dtos = this.mapper.Map<IEnumerable<EmployeeDto>>(employees);
             return Ok(dtos);
         }
+
         [HttpGet("{employeeId}",Name =nameof(GetEmployeeForCompany))]
         public async Task<ActionResult<EmployeeDto>> GetEmployeeForCompany(Guid companyId,Guid employeeId)
         {
@@ -47,7 +48,8 @@ namespace Routine.Api.Controllers
             var dto = this.mapper.Map<EmployeeDto>(employee);
             return Ok(dto);
         }
-        [HttpPost]
+
+        [HttpPost(Name =nameof(CreateEmployeeForCompany))]
         public async Task<ActionResult<EmployeeDto>> CreateEmployeeForCompany([FromRoute]Guid companyId,[FromBody]EmployeeAddDto employeeAddDto)
         {
             if (!await this.companyRepository.CompanyExitsAsync(companyId))
@@ -60,6 +62,7 @@ namespace Routine.Api.Controllers
             var returndto = this.mapper.Map<EmployeeDto>(entity);
             return CreatedAtRoute(nameof(GetEmployeeForCompany), new { companyId, employeeId = returndto.Id }, returndto);
         }
+
         [HttpPut("{employeeId}")]
         public async Task<IActionResult> UpdateEmployeeForCompany(Guid companyId, Guid employeeId, EmployeeUpdateDto employeeUpdateDto)
         {

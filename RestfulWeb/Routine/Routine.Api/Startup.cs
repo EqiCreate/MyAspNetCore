@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace Routine.Api
 {
@@ -28,7 +29,6 @@ namespace Routine.Api
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers(setup=>
@@ -47,6 +47,12 @@ namespace Routine.Api
                 .AddNewtonsoftJson(setup=> { setup.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver(); })
                 .AddXmlDataContractSerializerFormatters()//设置更多的支持xml格式的content type
                 ;
+            services.Configure<MvcOptions>(config=>
+            {
+                var newtonjsonOutputFormatter = config.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>()?.FirstOrDefault();
+                if (newtonjsonOutputFormatter != null)
+                    newtonjsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.company.hateoas+json");
+            });
             services.AddScoped<ICompanyRepository, CompanyRepository>();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddDbContext<RoutineDbContext>(opt=> 
@@ -54,6 +60,8 @@ namespace Routine.Api
                 opt.UseSqlite("Data Source=routine.db");
             });
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+            services.AddTransient<IPropertyCheckServices, PropertyCheckServices>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
