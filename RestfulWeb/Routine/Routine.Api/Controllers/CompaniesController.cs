@@ -13,6 +13,7 @@ using Routine.Api.Helpers;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using Microsoft.Net.Http.Headers;
+using Routine.Api.ActionConstraints;
 
 namespace Routine.Api.Controllers
 {
@@ -102,7 +103,27 @@ namespace Routine.Api.Controllers
             return Ok(friendly);
         }
 
+        [HttpPost(Name = nameof(CreateCompanyWithBankrupDto))]
+        [RequestHeaderMatchMediaType(requestHeaderToMatch: "Content-Type",
+          mediaType: "application/vnd.company.companyforcreationwithbankrupttime+json")]
+        [Consumes("application/vnd.company.companyforcreationwithbankrupttime+json")]
+        public async Task<ActionResult<CompanyDto>> CreateCompanyWithBankrupDto(CompanyAddWithBankrupDto companyAddDto)
+        {
+            var entity = this.mapper.Map<Company>(companyAddDto);
+            this.companyRepository.AddCompany(entity);
+            await this.companyRepository.SaveAsync();
+            var returnDto = this.mapper.Map<CompanyDto>(entity);
+            var links = this.CreateLinkForCompany(returnDto.Id, null);
+            var linkedDict = returnDto.ShapeData(null);
+            linkedDict.TryAdd("links", links);
+            return CreatedAtRoute(nameof(GetCompany), new { companyid = linkedDict.Select(x => x.Key == "Id") }, linkedDict);
+        }
+
         [HttpPost(Name =nameof(CreateCompany))]
+        [RequestHeaderMatchMediaType(requestHeaderToMatch:"Content-Type",
+            "application/json",
+            "application/vnd.company.companyforcreation+json")]
+        [Consumes("application/json","application/vnd.company.companyforcreation+json")]
         public async Task<ActionResult<CompanyDto>> CreateCompany(CompanyAddDto companyAddDto)
         {
             var entity = this.mapper.Map<Company>(companyAddDto);
@@ -113,8 +134,9 @@ namespace Routine.Api.Controllers
             var linkedDict = returnDto.ShapeData(null);
             linkedDict.TryAdd("links", links);
             return CreatedAtRoute(nameof(GetCompany),new { companyid= linkedDict.Select(x=>x.Key=="Id") }, linkedDict);
-
         }
+
+      
 
         [HttpOptions]
         public IActionResult GetCompanyOption()

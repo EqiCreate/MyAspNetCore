@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace Routine.Api.Models
 {
     public class CompanyFullDto
@@ -13,5 +9,6 @@ namespace Routine.Api.Models
         public string Product { get; set; }
         public string Introduction { get; set; }
         public string Name { get; set; }
+        public DateTime? BankrupTime { get; set; }
     }
 }

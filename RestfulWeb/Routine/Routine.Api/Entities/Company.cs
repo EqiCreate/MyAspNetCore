@@ -12,8 +12,8 @@ namespace Routine.Api.Entities
         public string Country { get; set; }
         public string Industry { get; set; }
         public string Product { get; set; }
-
         public string Introduction { get; set; }
+        public DateTime? BankrupTime { get; set; }
         public List<Employee> Employees { get; set; }
     }
 }

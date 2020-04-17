@@ -20,7 +20,7 @@ namespace Routine.Api.Profiles
 
             CreateMap<CompanyAddDto, Company>();
             CreateMap<Company, CompanyFullDto>();
-
+            CreateMap<CompanyAddWithBankrupDto, Company>();
         }
     }
 }
