@@ -19,6 +19,7 @@ namespace Routine.Api.Controllers
 {
     [ApiController]//当modelstate验证出错时候，自动返回客户端400
     [Route("api/companies")]
+
     public class CompaniesController : ControllerBase
     {
         private readonly ICompanyRepository companyRepository;
@@ -135,8 +136,6 @@ namespace Routine.Api.Controllers
             linkedDict.TryAdd("links", links);
             return CreatedAtRoute(nameof(GetCompany),new { companyid= linkedDict.Select(x=>x.Key=="Id") }, linkedDict);
         }
-
-      
 
         [HttpOptions]
         public IActionResult GetCompanyOption()

@@ -1,15 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Routine.Api.Services;
 using Routine.Api.Data;
 using Microsoft.EntityFrameworkCore;
@@ -31,9 +27,18 @@ namespace Routine.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpCacheHeaders(expires =>
+            {
+                expires.MaxAge = 60;
+                expires.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
+            }, validation => {
+                validation.MustRevalidate = true;
+            });
+            services.AddResponseCaching();
             services.AddControllers(setup=>
             {
                 setup.ReturnHttpNotAcceptable = true;//设置accept 类型错误的时候返回406
+                setup.CacheProfiles.Add("120sCacheProfile",new CacheProfile() { Duration=120});
             })
                 .ConfigureApiBehaviorOptions(setup=>//设置返回实体问题422 可考虑使用fluentvalidation 进行第三方库验证
                 {
@@ -50,8 +55,10 @@ namespace Routine.Api
             services.Configure<MvcOptions>(config=>
             {
                 var newtonjsonOutputFormatter = config.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>()?.FirstOrDefault();
-                if (newtonjsonOutputFormatter != null)
-                    newtonjsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.company.hateoas+json");
+                #region 注册全局content-type
+                //if (newtonjsonOutputFormatter != null)
+                //    newtonjsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.company.hateoas+json");
+                #endregion
             });
             services.AddScoped<ICompanyRepository, CompanyRepository>();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -61,10 +68,8 @@ namespace Routine.Api
             });
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
             services.AddTransient<IPropertyCheckServices, PropertyCheckServices>();
-
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -73,6 +78,9 @@ namespace Routine.Api
             }
 
             app.UseHttpsRedirection();
+
+            app.UseResponseCaching();
+            //app.UseHttpCacheHeaders();//不太好用 适合测试
 
             app.UseRouting();
 
