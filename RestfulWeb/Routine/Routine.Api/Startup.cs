@@ -80,7 +80,7 @@ namespace Routine.Api
             app.UseHttpsRedirection();
 
             app.UseResponseCaching();
-            //app.UseHttpCacheHeaders();//不太好用 适合测试
+            app.UseHttpCacheHeaders();//不太好用 适合测试
 
             app.UseRouting();
 
