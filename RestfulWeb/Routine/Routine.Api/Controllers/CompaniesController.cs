@@ -34,9 +34,9 @@ namespace Routine.Api.Controllers
             this.propertyMappingService = propertyMappingService ?? throw new ArgumentException(nameof(propertyMappingService));
             this.propertyCheckServices = propertyCheckServices ?? throw new ArgumentException(nameof(propertyCheckServices));
         }
+       
         [HttpGet(Name =nameof(GetCompanies))]
         [HttpHead]//不返回body其他和httpget一致
-        //public async Task<ActionResult<IEnumerable<CompanyDto>>> GetCompanies([FromQuery]CompanyDtoParameters parameters)
         public async Task<IActionResult> GetCompanies([FromQuery]CompanyDtoParameters parameters)
         {
             if (!this.propertyMappingService.ValidMappingExitFor<CompanyDto, Company>(parameters.OrderBy)) return BadRequest();
@@ -137,6 +137,7 @@ namespace Routine.Api.Controllers
             return CreatedAtRoute(nameof(GetCompany),new { companyid= linkedDict.Select(x=>x.Key=="Id") }, linkedDict);
         }
 
+        //判断 接口支持的http类型
         [HttpOptions]
         public IActionResult GetCompanyOption()
         {
@@ -190,6 +191,13 @@ namespace Routine.Api.Controllers
             return links;
         }
 
+        /// <summary>
+        /// 创建针对公司信息链接  hateoas
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <param name="hasprevious"></param>
+        /// <param name="hasnext"></param>
+        /// <returns></returns>
         private IEnumerable<LinkDto> CreateLinksForCompany(CompanyDtoParameters parameters,bool hasprevious,bool hasnext)
         {
             var links = new List<LinkDto>();

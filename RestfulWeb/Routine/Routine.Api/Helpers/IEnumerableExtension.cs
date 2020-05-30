@@ -9,6 +9,8 @@ namespace Routine.Api.Helpers
 {
     public  static class IEnumerableExtension
     {
+        
+        ///塑形，只返回需要的字段
         public static IEnumerable<ExpandoObject> ShapeData<Tsource>(this IEnumerable<Tsource> source, string fields)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

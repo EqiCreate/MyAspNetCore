@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Routine.Api.Services
 {
+    /// <summary>
+    /// 映射 传参的目标属性和是否反转的flag
+    /// </summary>
     public class ProperyMappingValue
     {
         public IEnumerable<string> DestionProperties { get; set; }

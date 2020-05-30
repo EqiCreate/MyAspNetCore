@@ -41,8 +41,7 @@ namespace Routine.Api.Controllers
         }
 
         [HttpGet("{employeeId}",Name =nameof(GetEmployeeForCompany))]
-        //[ResponseCache(Duration =60)]
-        [HttpCacheExpiration(CacheLocation =CacheLocation.Public,MaxAge =60)][HttpCacheValidation(MustRevalidate =false)]
+        //[HttpCacheExpiration(CacheLocation =CacheLocation.Public,MaxAge =60)][HttpCacheValidation(MustRevalidate =false)]
         public async Task<ActionResult<EmployeeDto>> GetEmployeeForCompany(Guid companyId,Guid employeeId)
         {
             if (!await this.companyRepository.CompanyExitsAsync(companyId))

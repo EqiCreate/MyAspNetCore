@@ -9,6 +9,7 @@ namespace Routine.Api.Helpers
 {
     public static class ObjectExtension
     {
+        //塑形
         public static ExpandoObject ShapeData<Tsource>(this Tsource source, string fields)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

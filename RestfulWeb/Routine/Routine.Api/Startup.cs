@@ -13,32 +13,32 @@ using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Formatters;
-
+using FluentValidation.AspNetCore;
 namespace Routine.Api
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-
         public void ConfigureServices(IServiceCollection services)
         {
+            //TODO 涉及到etag 以及乐观控制并发问题使用的缓存策略
             services.AddHttpCacheHeaders(expires =>
             {
                 expires.MaxAge = 60;
                 expires.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
-            }, validation => {
+            }, validation => {//验证模型
                 validation.MustRevalidate = true;
             });
             services.AddResponseCaching();
             services.AddControllers(setup=>
             {
                 setup.ReturnHttpNotAcceptable = true;//设置accept 类型错误的时候返回406
-                setup.CacheProfiles.Add("120sCacheProfile",new CacheProfile() { Duration=120});
+               // setup.CacheProfiles.Add("120sCacheProfile",new CacheProfile() { Duration=120});
             })
                 .ConfigureApiBehaviorOptions(setup=>//设置返回实体问题422 可考虑使用fluentvalidation 进行第三方库验证
                 {
@@ -51,13 +51,14 @@ namespace Routine.Api
                 })
                 .AddNewtonsoftJson(setup=> { setup.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver(); })
                 .AddXmlDataContractSerializerFormatters()//设置更多的支持xml格式的content type
+                .AddFluentValidation()//添加验证规则使 modelstate.isvalid按照自定义规则验证，暂且没有使用
                 ;
             services.Configure<MvcOptions>(config=>
             {
                 var newtonjsonOutputFormatter = config.OutputFormatters.OfType<NewtonsoftJsonOutputFormatter>()?.FirstOrDefault();
-                #region 注册全局content-type
-                //if (newtonjsonOutputFormatter != null)
-                //    newtonjsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.company.hateoas+json");
+                #region 注册全局content-type 
+                if (newtonjsonOutputFormatter != null)
+                    newtonjsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.company.hateoas+json");
                 #endregion
             });
             services.AddScoped<ICompanyRepository, CompanyRepository>();
@@ -74,13 +75,21 @@ namespace Routine.Api
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                app.UseDeveloperExceptionPage();//开发环境使用异常抛出
+            }
+            else
+            {
+                app.UseExceptionHandler(appBulider=>appBulider.Run(async context=> 
+                {
+                    context.Response.StatusCode = 500;
+                    await context.Response.WriteAsync("Unexpected error!");
+                }));
             }
 
             app.UseHttpsRedirection();
 
-            app.UseResponseCaching();
-            app.UseHttpCacheHeaders();//不太好用 适合测试
+            app.UseResponseCaching();//ms自带的缓存插件，不太好用 适合测试
+            app.UseHttpCacheHeaders();
 
             app.UseRouting();
 

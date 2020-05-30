@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Routine.Api.Helpers
 {
+    //分页 类
     public class PagedList<T> : List<T>
     {
         public int CurrentPage { get; private set; }
@@ -28,7 +29,7 @@ namespace Routine.Api.Helpers
         public static async Task<PagedList<T>> CreateAsync(IQueryable<T> source, int pagenumber, int pagesize)
         {
             var count = await source.CountAsync();
-            var items = await source.Skip(pagesize * (pagenumber - 1)).Take(pagesize).ToListAsync();
+            var items = await source.Skip(pagesize * (pagenumber - 1)).Take(pagesize).ToListAsync();//从这里正式进行数据库查询的动作
             return new PagedList<T>(items, count, pagenumber, pagesize);
         }
     }

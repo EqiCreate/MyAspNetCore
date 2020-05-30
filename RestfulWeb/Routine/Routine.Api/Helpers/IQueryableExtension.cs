@@ -9,6 +9,14 @@ namespace Routine.Api.Helpers
 {
     public static class IQueryableExtension
     {
+        /// <summary>
+        /// 排序
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="orderBy"></param>
+        /// <param name="mappingdict"></param>
+        /// <returns></returns>
         public static IQueryable<T> ApplySource<T>(this IQueryable<T> source, string orderBy, Dictionary<string, ProperyMappingValue> mappingdict)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
