@@ -75,6 +75,7 @@ namespace Heavy.Web
 
             });
             services.AddResponseCompression();
+            //services.AddSingleton<HttpContextAccessor>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
